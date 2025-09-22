@@ -8,10 +8,27 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      # 1. Checkout the repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 2. Set up Node.js (adjust version if needed)
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # 4. Build the static site
+      - name: Build static site
+        run: npm run build   # Make sure this generates the dist/ folder
+
+      # 5. Configure AWS credentials
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -19,5 +36,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Deploy static site to S3 bucket
-        run: aws s3 sync dist/ s3://website-deploy001 --delete --acl public-read
+      # 6. Deploy the build folder to S3
+      - name: Deploy to S3
+        run: |
+          echo "Contents of dist/:"
+          ls -la dist/   # Debug: show folder contents
+          aws s3 sync dist/ s3://website-deploy001 --delete --acl public-read
